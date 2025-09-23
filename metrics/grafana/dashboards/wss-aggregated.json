@@ -1,0 +1,82 @@
+{
+  "id": null,
+  "uid": "wss-aggregated",
+  "title": "WSS Aggregated Metrics",
+  "tags": ["wss","aggregated"],
+  "timezone": "browser",
+  "schemaVersion": 37,
+  "version": 3,
+  "refresh": "60s",
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Total Active Connections",
+      "gridPos": {"x":0,"y":0,"w":4,"h":3},
+      "targets":[{"expr":"sum(wss_active_connections)","legendFormat":"Active Connections"}],
+      "fieldConfig":{"defaults":{"unit":"none","color":{"mode":"thresholds"}},"thresholds":{"mode":"absolute","steps":[{"color":"green","value":null},{"color":"yellow","value":50},{"color":"red","value":100}]}}
+    },
+    {
+      "type": "stat",
+      "title": "Total Messages/sec",
+      "gridPos":{"x":4,"y":0,"w":4,"h":3},
+      "targets":[{"expr":"sum(rate(wss_messages_total[1m]))","legendFormat":"Messages/sec"}],
+      "fieldConfig":{"defaults":{"unit":"msgs/s","color":{"mode":"thresholds"}},"thresholds":{"mode":"absolute","steps":[{"color":"green","value":null},{"color":"yellow","value":100},{"color":"red","value":500}]}}
+    },
+    {
+      "type": "stat",
+      "title": "Total Messages Processed",
+      "gridPos":{"x":8,"y":0,"w":4,"h":3},
+      "targets":[{"expr":"sum(wss_messages_total)","legendFormat":"Total Messages"}],
+      "fieldConfig":{"defaults":{"unit":"none"}}
+    },
+    {
+      "type": "stat",
+      "title": "Total Messages Delivered",
+      "gridPos":{"x":0,"y":3,"w":4,"h":3},
+      "targets":[{"expr":"sum(wss_messages_delivered_total)","legendFormat":"Delivered"}],
+      "fieldConfig":{"defaults":{"unit":"none"}}
+    },
+    {
+      "type": "stat",
+      "title": "Unexpected Disconnects",
+      "gridPos":{"x":4,"y":3,"w":4,"h":3},
+      "targets":[{"expr":"sum(wss_unexpected_disconnects_total)","legendFormat":"Disconnects"}],
+      "fieldConfig":{"defaults":{"unit":"none","color":{"mode":"thresholds"}},"thresholds":{"mode":"absolute","steps":[{"color":"green","value":null},{"color":"yellow","value":5},{"color":"red","value":20}]}}
+    },
+    {
+      "type": "stat",
+      "title": "Avg CPU Usage (%)",
+      "gridPos": {"x":8,"y":3,"w":4,"h":3},
+      "targets":[{"expr":"avg(rate(container_cpu_usage_seconds_total[1m])) * 100","legendFormat":"CPU %"}],
+      "fieldConfig":{"defaults":{"unit":"percent","color":{"mode":"thresholds"}},"thresholds":{"mode":"absolute","steps":[{"color":"green","value":null},{"color":"yellow","value":50},{"color":"red","value":80}]}}
+    },
+    {
+      "type": "stat",
+      "title": "Avg Memory Usage (MB)",
+      "gridPos":{"x":0,"y":6,"w":4,"h":3},
+      "targets":[{"expr":"avg(container_memory_usage_bytes) / (1024*1024)","legendFormat":"Memory MB"}],
+      "fieldConfig":{"defaults":{"unit":"megabytes","color":{"mode":"thresholds"}},"thresholds":{"mode":"absolute","steps":[{"color":"green","value":null},{"color":"yellow","value":500},{"color":"red","value":1000}]}}
+    },
+    {
+      "type": "timeseries",
+      "title": "Packet Loss Over Time",
+      "gridPos":{"x":4,"y":6,"w":8,"h":6},
+      "targets":[{"expr":"sum(wss_messages_total) - sum(wss_messages_delivered_total)","legendFormat":"Lost Messages"}],
+      "fieldConfig":{"defaults":{"unit":"none","color":{"mode":"palette-classic"}}}
+    },
+    {
+      "type": "timeseries",
+      "title": "CPU Usage Over Time (%)",
+      "gridPos":{"x":0,"y":12,"w":6,"h":6},
+      "targets":[{"expr":"avg(rate(container_cpu_usage_seconds_total[1m])) * 100","legendFormat":"CPU %"}],
+      "fieldConfig":{"defaults":{"unit":"percent"}}
+    },
+    {
+      "type": "timeseries",
+      "title": "Memory Usage Over Time (MB)",
+      "gridPos":{"x":6,"y":12,"w":6,"h":6},
+      "targets":[{"expr":"avg(container_memory_usage_bytes) / (1024*1024)","legendFormat":"Memory MB"}],
+      "fieldConfig":{"defaults":{"unit":"megabytes"}}
+    }
+  ]
+}

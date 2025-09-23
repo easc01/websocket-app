@@ -1,0 +1,75 @@
+{
+  "id": null,
+  "uid": "wss-replica",
+  "title": "WSS Replica Metrics",
+  "tags": ["wss","replica"],
+  "timezone": "browser",
+  "schemaVersion": 37,
+  "version": 3,
+  "refresh": "60s",
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Active Connections per Replica",
+      "gridPos":{"x":0,"y":0,"w":4,"h":3},
+      "targets":[{"expr":"wss_active_connections","legendFormat":"{{instance}}"}],
+      "fieldConfig":{"defaults":{"unit":"none","color":{"mode":"thresholds"}},"thresholds":{"mode":"absolute","steps":[{"color":"green","value":null},{"color":"yellow","value":50},{"color":"red","value":100}]}}
+    },
+    {
+      "type": "stat",
+      "title": "Messages/sec per Replica",
+      "gridPos":{"x":4,"y":0,"w":4,"h":3},
+      "targets":[{"expr":"rate(wss_messages_total[1m])","legendFormat":"{{instance}}"}],
+      "fieldConfig":{"defaults":{"unit":"msgs/s"}}
+    },
+    {
+      "type": "stat",
+      "title": "Total Messages per Replica",
+      "gridPos":{"x":8,"y":0,"w":4,"h":3},
+      "targets":[{"expr":"wss_messages_total","legendFormat":"{{instance}}"}],
+      "fieldConfig":{"defaults":{"unit":"none"}}
+    },
+    {
+      "type": "stat",
+      "title": "Delivered Messages per Replica",
+      "gridPos":{"x":0,"y":3,"w":4,"h":3},
+      "targets":[{"expr":"wss_messages_delivered_total","legendFormat":"{{instance}}"}],
+      "fieldConfig":{"defaults":{"unit":"none"}}
+    },
+    {
+      "type": "stat",
+      "title": "Unexpected Disconnects",
+      "gridPos":{"x":4,"y":3,"w":4,"h":3},
+      "targets":[{"expr":"wss_unexpected_disconnects_total","legendFormat":"{{instance}}"}],
+      "fieldConfig":{"defaults":{"unit":"none","color":{"mode":"thresholds"}},"thresholds":{"mode":"absolute","steps":[{"color":"green","value":null},{"color":"yellow","value":5},{"color":"red","value":20}]}}
+    },
+    {
+      "type": "stat",
+      "title": "CPU Usage per Replica (%)",
+      "gridPos":{"x":8,"y":3,"w":4,"h":3},
+      "targets":[{"expr":"avg by (id) (rate(container_cpu_usage_seconds_total{id=~\"/docker/[a-z0-9]+\"}[1m])) * 100","legendFormat":"{{id}}"}],
+      "fieldConfig":{"defaults":{"unit":"percent"}}
+    },
+    {
+      "type": "stat",
+      "title": "Memory Usage per Replica (MB)",
+      "gridPos":{"x":0,"y":6,"w":4,"h":3},
+      "targets":[{"expr":"avg by (id) (container_memory_usage_bytes{id=~\"/docker/[a-z0-9]+\"}) / (1024*1024)","legendFormat":"{{id}}"}],
+      "fieldConfig":{"defaults":{"unit":"megabytes"}}
+    },
+    {
+      "type": "timeseries",
+      "title": "CPU Usage Over Time",
+      "gridPos":{"x":4,"y":6,"w":4,"h":6},
+      "targets":[{"expr":"avg by (id) (rate(container_cpu_usage_seconds_total{id=~\"/docker/[a-z0-9]+\"}[1m])) * 100","legendFormat":"{{id}}"}],
+      "fieldConfig":{"defaults":{"unit":"percent"}}
+    },
+    {
+      "type": "timeseries",
+      "title": "Memory Usage Over Time (MB)",
+      "gridPos":{"x":8,"y":6,"w":4,"h":6},
+      "targets":[{"expr":"avg by (id) (container_memory_usage_bytes{id=~\"/docker/[a-z0-9]+\"}) / (1024*1024)","legendFormat":"{{id}}"}],
+      "fieldConfig":{"defaults":{"unit":"megabytes"}}
+    }
+  ]
+}

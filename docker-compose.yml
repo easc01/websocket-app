@@ -1,0 +1,77 @@
+networks:
+  ws-network:
+    driver: overlay
+
+services:
+  redis:
+    image: redis:7-alpine
+    networks:
+      - ws-network
+    restart: unless-stopped
+
+  wss:
+    image: websocket-app:latest
+    environment:
+      - WSS_PORT=8081
+      - METRICS_PORT=9000
+      - ENVIRONMENT=local
+      - REDIS_URI=redis://redis:6379
+      - SERVICE=websocket
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2g
+    ports:
+      - target: 8081
+        published: 8080
+        protocol: tcp
+        mode: ingress
+    networks:
+      - ws-network
+
+  prometheus:
+    image: prom/prometheus:latest
+    configs:
+      - source: prometheus_config
+        target: /etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - ws-network
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    networks:
+      - ws-network
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+    - ./metrics/grafana/provisioning:/etc/grafana/provisioning
+    - ./metrics/grafana/dashboards:/var/lib/grafana/dashboards
+    restart: unless-stopped
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    deploy:
+      mode: global
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    networks:
+      - ws-network
+    ports:
+      - "8082:8080"
+
+configs:
+  prometheus_config:
+    file: ./metrics/prometheus/prometheus.yml
