@@ -91,6 +91,15 @@ func (c *Client) handleUserSentMessage(msg *ws.WSMessage) {
 		log.Printf("recieved chat message from %s: %v", c.UserID, msg.Payload)
 		msg.SendMessageToUser(c.Redis)
 
+	case ws.MsgTypeLatencyReport:
+		latency, ok := msg.Payload.(float64)
+		if !ok {
+			log.Printf("invalid latency report from %s: %+v", c.UserID, msg.Payload)
+			break
+		}
+		log.Printf("received latency report from %s: %v", c.UserID, latency)
+		metrics.OnLatencyReport(latency)
+
 	default:
 		log.Printf("unknown message type from %s: %v", c.UserID, msg.Type)
 	}

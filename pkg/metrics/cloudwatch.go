@@ -111,5 +111,7 @@ func pushMetricsToCloudWatch() {
 	})
 	if err != nil {
 		log.Printf("failed to push metrics to CloudWatch: %v", err)
+	} else {
+		log.Println("pushed metrics to cloudwatch")
 	}
 }

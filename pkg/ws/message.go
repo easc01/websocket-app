@@ -13,11 +13,12 @@ type WSMessageType string
 
 const (
 	// System / notifications
-	MsgTypeNotification WSMessageType = "notification"
-	MsgTypeRoadmapReady WSMessageType = "roadmap_ready"
-	MsgTypeQuizReady    WSMessageType = "quiz_ready"
-	MsgTypeChatMessage  WSMessageType = "chat_message"
-	MsgTypeUnknown      WSMessageType = "unknown"
+	MsgTypeNotification  WSMessageType = "notification"
+	MsgTypeRoadmapReady  WSMessageType = "roadmap_ready"
+	MsgTypeQuizReady     WSMessageType = "quiz_ready"
+	MsgTypeChatMessage   WSMessageType = "chat_message"
+	MsgTypeLatencyReport WSMessageType = "latency_report"
+	MsgTypeUnknown       WSMessageType = "unknown"
 )
 
 type WSMessage struct {
