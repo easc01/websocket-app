@@ -50,16 +50,20 @@ func (c *Client) Listen() {
 	for {
 		_, msgBytes, err := c.Conn.ReadMessage()
 		if err != nil {
-			// Check if the disconnect was unexpected
-			if websocket.IsUnexpectedCloseError(
-				err,
-				websocket.CloseNormalClosure,
-				websocket.CloseGoingAway,
-			) {
+			// Check if it’s a clean close
+			if closeErr, ok := err.(*websocket.CloseError); ok {
+				if closeErr.Code == websocket.CloseNormalClosure ||
+					closeErr.Code == websocket.CloseGoingAway {
+					log.Printf("connection closed normally for user %s: %v", c.UserID, err)
+				} else {
+					// unexpected close code
+					metrics.OnUnexpectedDisconnect()
+					log.Printf("unexpected disconnect for user %s: %v", c.UserID, err)
+				}
+			} else {
+				// not a CloseError (network error, reset, etc.) → unexpected
 				metrics.OnUnexpectedDisconnect()
 				log.Printf("unexpected disconnect for user %s: %v", c.UserID, err)
-			} else {
-				log.Printf("connection closed normally for user %s: %v", c.UserID, err)
 			}
 			break
 		}
