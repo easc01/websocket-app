@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
+	aCfg "github.com/easc01/websocket-app/pkg/config"
 )
 
 var cwClient *cloudwatch.Client
@@ -80,32 +81,62 @@ func pushMetricsToCloudWatch() {
 
 	// Push metrics to CloudWatch
 	_, err := cwClient.PutMetricData(context.Background(), &cloudwatch.PutMetricDataInput{
-		Namespace: aws.String("WSS"),
+		Namespace: aws.String("wss/metrics"),
 		MetricData: []types.MetricDatum{
 			{
 				MetricName: aws.String("ActiveConnections"),
 				Value:      aws.Float64(float64(active)),
 				Unit:       types.StandardUnitCount,
+				Dimensions: []types.Dimension{
+					{
+						Name:  aws.String("ServerID"),
+						Value: aws.String(aCfg.AppConfig.ServerID),
+					},
+				},
 			},
 			{
 				MetricName: aws.String("MessagesTotal"),
 				Value:      aws.Float64(float64(msgTotal)),
 				Unit:       types.StandardUnitCount,
+				Dimensions: []types.Dimension{
+					{
+						Name:  aws.String("ServerID"),
+						Value: aws.String(aCfg.AppConfig.ServerID),
+					},
+				},
 			},
 			{
 				MetricName: aws.String("MessagesDelivered"),
 				Value:      aws.Float64(float64(msgDelivered)),
 				Unit:       types.StandardUnitCount,
+				Dimensions: []types.Dimension{
+					{
+						Name:  aws.String("ServerID"),
+						Value: aws.String(aCfg.AppConfig.ServerID),
+					},
+				},
 			},
 			{
 				MetricName: aws.String("UnexpectedDisconnects"),
 				Value:      aws.Float64(float64(unexpected)),
 				Unit:       types.StandardUnitCount,
+				Dimensions: []types.Dimension{
+					{
+						Name:  aws.String("ServerID"),
+						Value: aws.String(aCfg.AppConfig.ServerID),
+					},
+				},
 			},
 			{
 				MetricName: aws.String("AverageLatencyMs"),
 				Value:      aws.Float64(avgLatency),
 				Unit:       types.StandardUnitMilliseconds,
+				Dimensions: []types.Dimension{
+					{
+						Name:  aws.String("ServerID"),
+						Value: aws.String(aCfg.AppConfig.ServerID),
+					},
+				},
 			},
 		},
 	})
