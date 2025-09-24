@@ -79,7 +79,6 @@ func (c *Client) Listen() {
 		msg.Timestamp = time.Now()
 
 		// handle the message
-		metrics.OnMessageReceived()
 		c.handleUserSentMessage(msg)
 	}
 }
@@ -90,6 +89,7 @@ func (c *Client) handleUserSentMessage(msg *ws.WSMessage) {
 		// handle chat message
 		log.Printf("recieved chat message from %s: %v", c.UserID, msg.Payload)
 		msg.SendMessageToUser(c.Redis)
+		metrics.OnMessageReceived()
 
 	case ws.MsgTypeLatencyReport:
 		latency, ok := msg.Payload.(float64)

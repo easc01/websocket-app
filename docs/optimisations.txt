@@ -1,0 +1,115 @@
+1. Heartbeat & Redis TTL
+
+Every client has a goroutine running Heartbeat() that sets TTL every 30s.
+
+For 2.5k connections per server, that’s 2.5k goroutines firing Redis EXPIRE commands every 30 seconds.
+
+Potential issues:
+
+Network latency to Redis adds up.
+
+Even though Redis is fast, at high concurrency these small latencies contribute to overall CPU/network overhead.
+
+Improvement:
+Consider batching heartbeats or using a single ticker per server to refresh multiple user keys in bulk.
+
+2. Message fan-out
+
+You SMEMBERS every time a user sends a message to get all servers the recipient is on. Then EXISTS each server, then PUBLISH.
+
+For large scale:
+
+SMEMBERS + EXISTS per message can be expensive in Redis.
+
+High latency occurs if Redis is not local or under load.
+
+Improvement:
+
+Cache user-to-server mapping in memory per server (refresh periodically).
+
+Minimize Redis calls per message.
+
+3. WebSocket writes
+
+Each message sent calls Conn.WriteMessage().
+
+Problem: writes are blocking; if client’s TCP buffer is full, it blocks the goroutine.
+
+Symptom: slow clients can stall message delivery for all messages handled in that goroutine.
+
+Improvement:
+
+Use a buffered channel per client and a single write goroutine per client that reads from the channel.
+
+This decouples WebSocket writes from message processing.
+
+4. Redis Pub/Sub consumption
+
+ConsumeServerEvents() subscribes to a Redis channel.
+
+Messages are delivered to SendMessageToLocalUser() sequentially.
+
+If multiple messages arrive at once:
+
+They are handled one by one per server goroutine.
+
+For 2.5k connections, high fan-out → delays accumulate.
+
+Improvement:
+
+Use a worker pool to fan out messages in parallel instead of sequentially.
+
+For example, spawn N workers that consume messages from a channel instead of writing directly in the Pub/Sub loop.
+
+5. Concurrency
+
+Currently, each connection spawns at least 2 goroutines (listen + heartbeat).
+
+2.5k connections → 5k goroutines per server.
+
+This is fine for Go, but WebSocket writes + Redis calls + JSON marshal/unmarshal all happening per goroutine can lead to CPU spikes and slow message delivery.
+
+Improvement:
+
+Limit goroutines doing heavy work per message. Use worker pools for CPU-intensive tasks (JSON marshalling, Redis calls).
+
+Make SendMessageToUser() fully asynchronous.
+
+6. Other observations
+
+Redis pool size is 10. That may be too small for high concurrency:
+
+Many concurrent SMEMBERS, EXISTS, PUBLISH calls.
+
+If pool is exhausted, requests block → adds latency.
+
+Recommendation: PoolSize = numConnections / 10 as a rough starting point.
+
+You are using non-sticky connections with multiple servers, which is correct.
+But fan-out on every message multiplies Redis calls → more latency.
+
+✅ Summary of main bottlenecks
+
+Per-client heartbeat goroutines → many Redis TTL updates
+
+SMEMBERS + EXISTS + PUBLISH on every message → Redis latency adds up
+
+WebSocket WriteMessage is blocking → slow clients stall messages
+
+Pub/Sub handling is sequential → high fan-out causes latency
+
+Redis pool too small → blocking calls
+
+💡 Suggested optimizations
+
+Heartbeat batching: refresh TTLs for multiple users in one go
+
+In-memory cache: track which servers a user is on, refresh every few seconds
+
+Buffered write channel per client: decouple writes from message fan-out
+
+Worker pool for message delivery: parallelize message sending
+
+Increase Redis pool size to handle concurrency
+
+If you implement these, you could reduce average latency from ~14 s to <200 ms per message, and your 4 c6i.large servers might easily handle 10k–20k connections.
